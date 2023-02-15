@@ -18,10 +18,11 @@ public class Main {
         for(int index = 0; index<stockDataSize; index++){
             stockData.add((int)(Math.random()*maxStockDataVal));
         }
-
+        ;
         List<Integer> queries = new ArrayList<>();
         for(int additionalIndex = 1; additionalIndex<amountOfQueries;additionalIndex++){
-            queries.add((int)(Math.random()*stockDataSize));
+            //queries.add((int)(Math.random()*stockDataSize));
+            queries.add(stockData.indexOf(Collections.min(stockData)));
         }
         int runcount = 5;
         long[] noStreamTimes = new long[runcount+1];
@@ -98,6 +99,7 @@ public class Main {
 
         String prefix = "%5d -20s%s %5d\n";
         System.out.println("Runs with last as average value:");
+        System.out.println("noStreamTimes      noStreamMinTimes        noStreamKnownTimes         noStreamMinKnownTimes    mapLookupMinKnownTimes   mapLookupMinTimes          streamTimes");
         for (int i = 0; i<=runcount;i++) {
             System.out.println(noStreamTimes[i] + "                 "+noStreamMinTimes[i]+ "                 "+noStreamKnownTimes[i]+ "                 "+noStreamMinKnownTimes[i]+ "                 "+mapLookupMinKnownTimes[i]+ "                 "+mapLookupMinTimes[i]+ "                 "+ streamTimes[i]);
         }
