@@ -4,8 +4,7 @@ import java.util.stream.IntStream;
 
 public class Main {
     public static void main(String[] args) {
-        
-        System.out.println("Hello world!");
+
         int stockDataSize = 1000000;
         int maxStockDataVal = 100000;
         int amountOfQueries = 250;
@@ -92,7 +91,6 @@ public class Main {
             System.out.println(noStreamTimes[i] + "                 "+noStreamMinTimes[i]+ "                 "+noStreamKnownTimes[i]+ "                 "+noStreamMinKnownTimes[i]+ "                 "+mapLookupMinKnownTimes[i]+ "                 "+ streamTimes[i]);
         }
     }
-
     public static List<Integer> predictAnswerMapLookupWithCheckingMinimumAndKnownValues(List<Integer> stockData, List<Integer> queries) {
         // Write your code hereList<int> answers = new();
         //use arraylist to get an ordered list
