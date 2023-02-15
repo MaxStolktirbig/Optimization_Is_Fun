@@ -30,6 +30,7 @@ public class Main {
         long[] noStreamKnownTimes = new long[runcount+1];
         long[] noStreamMinKnownTimes = new long[runcount+1];
         long[] mapLookupMinKnownTimes = new long[runcount+1];
+        long[] mapLookupMinTimes = new long[runcount+1];
         long[] streamTimes = new long[runcount+1];
 
         long noStreamTimesTotal = 0;
@@ -77,6 +78,15 @@ public class Main {
         }
         mapLookupMinKnownTimes[runcount] = mapLookupMinKnownTimesTotal/runcount;
 
+        long mapLookupMinTimesTotal = 0;
+        for(int i = 0; i < runcount; i++) {
+            long currentTime = System.nanoTime();
+            predictAnswerMapLookupWithCheckingMinimumValue(stockData, queries);
+            mapLookupMinTimes[i] = System.nanoTime()-currentTime;
+            mapLookupMinTimesTotal+=mapLookupMinTimes[i];
+        }
+        mapLookupMinTimes[runcount] = mapLookupMinTimesTotal/runcount;
+
         long streamTimesTotal = 0;
         for(int i = 0; i < runcount; i++) {
             long currentTime = System.nanoTime();
@@ -87,13 +97,71 @@ public class Main {
         streamTimes[runcount] = streamTimesTotal/runcount;
 
         String prefix = "%5d -20s%s %5d\n";
+        System.out.println("Runs with last as average value:");
         for (int i = 0; i<=runcount;i++) {
-            System.out.println(noStreamTimes[i] + "                 "+noStreamMinTimes[i]+ "                 "+noStreamKnownTimes[i]+ "                 "+noStreamMinKnownTimes[i]+ "                 "+mapLookupMinKnownTimes[i]+ "                 "+ streamTimes[i]);
+            System.out.println(noStreamTimes[i] + "                 "+noStreamMinTimes[i]+ "                 "+noStreamKnownTimes[i]+ "                 "+noStreamMinKnownTimes[i]+ "                 "+mapLookupMinKnownTimes[i]+ "                 "+mapLookupMinTimes[i]+ "                 "+ streamTimes[i]);
         }
     }
+
+
+
+
+    public static List<Integer> predictAnswerMapLookupWithCheckingMinimumValue(List<Integer> stockData, List<Integer> queries) {
+        ArrayList<Integer> answers = new ArrayList<>();
+        int stockDataSize = stockData.size();
+        Integer minimumValue = stockData.get(0);
+        HashMap<Integer, Integer> stockDataMap = new HashMap<>();
+        for (int index = 0; index<stockDataSize; index++) {
+            Integer value = stockData.get(index);
+            minimumValue = value < minimumValue ? value : minimumValue;
+            stockDataMap.put(index, value);
+        }
+        for(int query : queries){
+            int queryIndex = query-1;
+            int queryValue = stockData.get(queryIndex);
+            if(queryValue==minimumValue){
+                answers.add(-1);
+                continue;
+            }
+
+            int closestIndexUpper = -1;
+            int upperDistance = 0;
+            for(int stockDataIndex = queryIndex; stockDataIndex < stockDataSize; stockDataIndex++){
+                upperDistance++;
+                if(stockDataMap.get(stockDataIndex) < queryValue){
+                    closestIndexUpper = stockDataIndex;
+                    break;
+                }
+            }
+            int closestIndexLower = -1;
+            int lowerDistance = 0;
+            for(int stockDataIndex = queryIndex; stockDataIndex > 0; stockDataIndex--){
+                lowerDistance++;
+                if(stockDataMap.get(stockDataIndex) < queryValue){
+                    closestIndexLower = stockDataIndex;
+                    break;
+                }
+            }
+            if(closestIndexLower == -1 && closestIndexUpper == -1){
+                answers.add(-1);
+            } else if (closestIndexUpper==-1){
+                answers.add(closestIndexLower+1);
+            } else if (closestIndexLower==-1){
+                answers.add(closestIndexUpper+1);
+            } else {
+                int finalIndex = lowerDistance > upperDistance ? closestIndexUpper : closestIndexLower;
+                if(lowerDistance == upperDistance){
+                    finalIndex = closestIndexLower+1;
+                }
+                answers.add(finalIndex);
+            }
+        }
+        return answers;
+
+    }
+
+    //this function tries to use a map lookup while memorizing the known values and checking minimum value
     public static List<Integer> predictAnswerMapLookupWithCheckingMinimumAndKnownValues(List<Integer> stockData, List<Integer> queries) {
-        // Write your code hereList<int> answers = new();
-        //use arraylist to get an ordered list
         ArrayList<Integer> answers = new ArrayList<>();
         int stockDataSize = stockData.size();
         Integer minimumValue = stockData.get(0);
@@ -157,8 +225,6 @@ public class Main {
     }
 
     public static List<Integer> predictAnswerNoStreamWithCheckingMinimumAndKnownValues(List<Integer> stockData, List<Integer> queries) {
-        // Write your code hereList<int> answers = new();
-        //use arraylist to get an ordered list
         ArrayList<Integer> answers = new ArrayList<>();
         int stockDataSize = stockData.size();
         Integer minimumValue = stockData.get(0);
@@ -170,11 +236,13 @@ public class Main {
         for(int query : queries){
             int queryIndex = query-1;
             int queryValue = stockData.get(queryIndex);
+            //check if this is the minimum value so that we can skip the loops if so
             if(queryValue==minimumValue){
                 answers.add(-1);
                 knownIndexValues.put(queryIndex, -1);
                 continue;
             }
+            //check if we know this index, look it up if so so that we can skip the loops
             if(knownIndexValues.containsKey(queryIndex)){
                 answers.add(knownIndexValues.get(queryIndex));
                 continue;
